@@ -1,0 +1,32 @@
+/* App Layout Styles */
+#root {
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+/* Ensure layout takes full height */
+.ant-layout {
+  min-height: 100vh;
+}
+
+/* Sidebar branding */
+.sidebar-logo {
+  color: white;
+  padding: 16px;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  border-bottom: 1px solid #303030;
+}
+
+/* Menu items */
+.ant-menu-item a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Content area */
+.ant-layout-content {
+  overflow-y: auto;
+}
