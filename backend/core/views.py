@@ -1,9 +1,9 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework import viewsets, filters
+from rest_framework import viewsets, filters, status
 from django.db.models import Q
-from .models import District, Farm, Herd
-from .serializers import DistrictSerializer, FarmSerializer, HerdSerializer
+from .models import District, Farm, Herd, Event
+from .serializers import DistrictSerializer, FarmSerializer, HerdSerializer, EventSerializer
 
 
 @api_view(['GET'])
@@ -23,6 +23,7 @@ def api_root(request):
             "health": "/api/health/",
             "districts": "/api/districts/",
             "farms": "/api/farms/",
+            "events": "/api/events/",
             "admin": "/admin/"
         }
     })
@@ -63,3 +64,51 @@ class FarmViewSet(viewsets.ReadOnlyModelViewSet):
             )
         
         return queryset
+
+
+class EventViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for listing, retrieving, and updating events
+    
+    Query Parameters:
+    - district: Filter by district code
+    - event_type: Filter by event type (disease_outbreak, vaccination, inspection, quarantine)
+    - status: Filter by status (reported, investigating, contained, resolved)
+    
+    PATCH /api/events/{id}/ - Update only the status field
+    """
+    queryset = Event.objects.select_related('farm__district').all()
+    serializer_class = EventSerializer
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        
+        # Filter by district code
+        district_code = self.request.query_params.get('district', None)
+        if district_code:
+            queryset = queryset.filter(farm__district__code=district_code)
+        
+        # Filter by event_type
+        event_type = self.request.query_params.get('event_type', None)
+        if event_type:
+            queryset = queryset.filter(event_type=event_type)
+        
+        # Filter by status
+        status_filter = self.request.query_params.get('status', None)
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+        
+        return queryset
+    
+    def partial_update(self, request, *args, **kwargs):
+        """
+        PATCH endpoint - only allow updating the status field
+        """
+        # Only allow 'status' field in PATCH
+        if set(request.data.keys()) - {'status'}:
+            return Response(
+                {"error": "Only 'status' field can be updated via PATCH"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        return super().partial_update(request, *args, **kwargs)

@@ -6,19 +6,32 @@ A government web portal for agricultural and veterinary system management, built
 
 ```
 agro-web/
-├── backend/              # Django REST Framework API
-│   ├── akyl_jer/        # Django project
-│   ├── core/            # Core app with health endpoint
+├── backend/                      # Django REST Framework API
+│   ├── akyl_jer/                # Django project
+│   ├── core/                    # Core app
+│   │   ├── models.py           # District, Farm, Herd models
+│   │   ├── serializers.py      # DRF serializers
+│   │   ├── views.py            # API viewsets
+│   │   ├── tests.py            # API tests
+│   │   └── management/         # Management commands
+│   │       └── commands/
+│   │           └── seed_fake_data.py
 │   ├── manage.py
-│   └── venv/            # Python virtual environment
-├── frontend/            # React + TypeScript + Vite
+│   └── venv/                    # Python virtual environment
+├── frontend/                    # React + TypeScript + Vite
 │   ├── src/
-│   │   ├── pages/       # Page components
-│   │   ├── App.tsx      # Main app with routing
-│   │   └── main.tsx     # Entry point
+│   │   ├── pages/              # Page components
+│   │   │   ├── DashboardPage.tsx
+│   │   │   ├── FarmsPage.tsx   # Farm registry with filters
+│   │   │   └── EventsPage.tsx
+│   │   ├── types/              # TypeScript types
+│   │   │   └── farm.ts
+│   │   ├── App.tsx             # Main app with routing
+│   │   └── main.tsx            # Entry point
 │   ├── package.json
 │   └── vite.config.ts
-└── README.md
+├── README.md
+└── run_all_tests.sh            # Complete test suite
 ```
 
 ## Backend Setup (Django REST Framework)
@@ -49,7 +62,13 @@ agro-web/
    python manage.py migrate
    ```
 
-5. **Create superuser (optional):**
+5. **Seed database with fake data:**
+   ```bash
+   python manage.py seed_fake_data
+   ```
+   This creates 3 districts, 6-10 farms, and 15-30 animal herds with realistic data.
+
+6. **Create superuser (optional):**
    ```bash
    python manage.py createsuperuser
    ```

@@ -7,7 +7,7 @@ import DashboardPage from '../DashboardPage';
 
 // Mock fetch globally
 beforeEach(() => {
-  global.fetch = jest.fn(() =>
+  (global as any).fetch = jest.fn(() =>
     Promise.resolve({
       ok: true,
       json: () => Promise.resolve({ status: 'ok' })
@@ -41,7 +41,7 @@ describe('DashboardPage', () => {
 
   test('handles API error gracefully', async () => {
     // Mock a failed fetch
-    global.fetch = jest.fn(() =>
+    (global as any).fetch = jest.fn(() =>
       Promise.reject(new Error('Network error'))
     );
 

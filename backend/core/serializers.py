@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import District, Farm, Herd
+from .models import District, Farm, Herd, Event
 
 
 class DistrictSerializer(serializers.ModelSerializer):
@@ -46,3 +46,35 @@ class FarmSerializer(serializers.ModelSerializer):
     def get_total_animals(self, obj):
         """Calculate total number of animals across all herds"""
         return sum(herd.headcount for herd in obj.herds.all())
+
+
+class EventSerializer(serializers.ModelSerializer):
+    """Serializer for Event model with embedded farm summary"""
+    event_type_display = serializers.CharField(source='get_event_type_display', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    farm_summary = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Event
+        fields = [
+            'id',
+            'farm',
+            'farm_summary',
+            'event_type',
+            'event_type_display',
+            'status',
+            'status_display',
+            'description',
+            'reported_at',
+            'updated_at'
+        ]
+        read_only_fields = ['reported_at', 'updated_at']
+    
+    def get_farm_summary(self, obj):
+        """Embed farm details: id, farmer_name, village, district_name"""
+        return {
+            'id': obj.farm.id,
+            'farmer_name': obj.farm.farmer_name,
+            'village': obj.farm.village,
+            'district_name': obj.farm.district.name
+        }

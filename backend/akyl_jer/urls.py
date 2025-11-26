@@ -16,11 +16,19 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path
-from core.views import health, api_root
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from core.views import health, api_root, DistrictViewSet, FarmViewSet, EventViewSet
+
+# Create router for DRF viewsets
+router = DefaultRouter()
+router.register(r'districts', DistrictViewSet, basename='district')
+router.register(r'farms', FarmViewSet, basename='farm')
+router.register(r'events', EventViewSet, basename='event')
 
 urlpatterns = [
     path("", api_root, name="api-root"),
     path("admin/", admin.site.urls),
     path("api/health/", health, name="health"),
+    path("api/", include(router.urls)),
 ]

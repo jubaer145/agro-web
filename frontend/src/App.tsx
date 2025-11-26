@@ -1,4 +1,3 @@
-import React from 'react';
 import { Layout, Menu } from 'antd';
 import { Link, Routes, Route, useLocation } from 'react-router-dom';
 import { DashboardOutlined, HomeOutlined, CalendarOutlined } from '@ant-design/icons';

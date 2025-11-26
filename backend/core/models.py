@@ -50,3 +50,33 @@ class Herd(models.Model):
     
     def __str__(self):
         return f"{self.headcount} {self.animal_type} at {self.farm.farmer_name}'s farm"
+
+
+class Event(models.Model):
+    """Disease outbreak or veterinary event at a farm"""
+    EVENT_TYPES = [
+        ('disease_outbreak', 'Disease Outbreak'),
+        ('vaccination', 'Vaccination'),
+        ('inspection', 'Inspection'),
+        ('quarantine', 'Quarantine'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('reported', 'Reported'),
+        ('investigating', 'Investigating'),
+        ('contained', 'Contained'),
+        ('resolved', 'Resolved'),
+    ]
+    
+    farm = models.ForeignKey(Farm, on_delete=models.CASCADE, related_name='events')
+    event_type = models.CharField(max_length=50, choices=EVENT_TYPES)
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='reported')
+    description = models.TextField()
+    reported_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-reported_at']
+    
+    def __str__(self):
+        return f"{self.get_event_type_display()} at {self.farm.farmer_name}'s farm - {self.status}"
