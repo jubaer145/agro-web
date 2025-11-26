@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Akyl Jer Government Portal - Quick Start Script
+# Акыл Жер Government Portal - Quick Start Script
 # This script helps you run the backend and frontend servers
 
 echo "======================================"
-echo "Akyl Jer Government Portal Quick Start"
+echo "Акыл Жер Government Portal Quick Start"
 echo "======================================"
 echo ""
 

@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Complete Test & Verification Script for Akyl Jer Portal
+# Complete Test & Verification Script for Акыл Жер Portal
 
 echo "╔════════════════════════════════════════════════════════╗"
-echo "║   Akyl Jer Government Portal - Complete Test Suite    ║"
+echo "║   Акыл Жер Government Portal - Complete Test Suite    ║"
 echo "╚════════════════════════════════════════════════════════╝"
 echo ""
 

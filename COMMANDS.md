@@ -1,4 +1,4 @@
-# Command Reference - Akyl Jer Government Portal
+# Command Reference - Акыл Жер Government Portal
 
 ## Quick Start
 

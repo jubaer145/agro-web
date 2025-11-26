@@ -17,7 +17,7 @@ def api_root(request):
     Root endpoint providing API information
     """
     return Response({
-        "message": "Akyl Jer Government Portal API",
+        "message": "Акыл Жер Government Portal API",
         "version": "1.0.0",
         "endpoints": {
             "health": "/api/health/",

@@ -1,4 +1,4 @@
-# Akyl Jer Government Portal
+# Акыл Жер Government Portal
 
 A government web portal for agricultural and veterinary system management, built with Django REST Framework (backend) and React + TypeScript + Vite + Ant Design (frontend).
 
