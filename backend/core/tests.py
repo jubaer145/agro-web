@@ -14,36 +14,36 @@ class HealthAPITest(APITestCase):
 class FarmAPITest(APITestCase):
     def setUp(self):
         """Set up test data"""
-        # Create districts
-        self.district1 = District.objects.create(name='Almaty Region', code='ALM')
-        self.district2 = District.objects.create(name='Nur-Sultan Region', code='NUR')
+        # Create regions
+        self.district1 = District.objects.create(name='Chuy Region', code='CHU')
+        self.district2 = District.objects.create(name='Issyk-Kul Region', code='IKL')
         
         # Create farms
         self.farm1 = Farm.objects.create(
             district=self.district1,
-            farmer_name='Almas Nurzhanov',
-            phone='+7 701 234 5678',
-            village='Kaskelen',
-            location_lat=43.2,
-            location_lng=76.6
+            farmer_name='Bolot Mamatov',
+            phone='+996 555 123 456',
+            village='Tokmok',
+            location_lat=42.8,
+            location_lng=75.3
         )
         
         self.farm2 = Farm.objects.create(
             district=self.district1,
             farmer_name='Aigul Bekova',
-            phone='+7 702 345 6789',
-            village='Talgar',
-            location_lat=43.3,
-            location_lng=77.2
+            phone='+996 556 234 567',
+            village='Kant',
+            location_lat=42.9,
+            location_lng=74.9
         )
         
         self.farm3 = Farm.objects.create(
             district=self.district2,
-            farmer_name='Yerlan Suleimenov',
-            phone='+7 703 456 7890',
-            village='Aksu',
-            location_lat=51.1,
-            location_lng=71.4
+            farmer_name='Nurlan Toktomushev',
+            phone='+996 557 345 678',
+            village='Cholpon-Ata',
+            location_lat=42.6,
+            location_lng=77.1
         )
         
         # Create herds
@@ -67,9 +67,9 @@ class FarmAPITest(APITestCase):
         self.assertEqual(len(data), 3)
         
         # Check first farm has nested data
-        farm1_data = next(f for f in data if f['farmer_name'] == 'Almas Nurzhanov')
-        self.assertEqual(farm1_data['district_name'], 'Almaty Region')
-        self.assertEqual(farm1_data['district_code'], 'ALM')
+        farm1_data = next(f for f in data if f['farmer_name'] == 'Bolot Mamatov')
+        self.assertEqual(farm1_data['district_name'], 'Chuy Region')
+        self.assertEqual(farm1_data['district_code'], 'CHU')
         self.assertEqual(farm1_data['village'], 'Kaskelen')
         self.assertEqual(len(farm1_data['herds']), 2)
         self.assertEqual(farm1_data['total_animals'], 125)
@@ -77,32 +77,32 @@ class FarmAPITest(APITestCase):
     def test_farms_filter_by_district(self):
         """Test filtering farms by district code"""
         url = reverse('farm-list')
-        response = self.client.get(url, {'district': 'ALM'})
+        response = self.client.get(url, {'district': 'CHU'})
         
         self.assertEqual(response.status_code, 200)
         data = response.json()
         
-        # Should only have farms from Almaty region
+        # Should only have farms from Chuy region
         self.assertEqual(len(data), 2)
         for farm in data:
-            self.assertEqual(farm['district_code'], 'ALM')
+            self.assertEqual(farm['district_code'], 'CHU')
     
     def test_farms_search_by_farmer_name(self):
         """Test searching farms by farmer name"""
         url = reverse('farm-list')
-        response = self.client.get(url, {'search': 'Almas'})
+        response = self.client.get(url, {'search': 'Bolot'})
         
         self.assertEqual(response.status_code, 200)
         data = response.json()
         
         # Should find 1 farm
         self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]['farmer_name'], 'Almas Nurzhanov')
+        self.assertEqual(data[0]['farmer_name'], 'Bolot Mamatov')
     
     def test_farms_search_by_phone(self):
         """Test searching farms by phone number"""
         url = reverse('farm-list')
-        response = self.client.get(url, {'search': '702'})
+        response = self.client.get(url, {'search': '556'})
         
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -131,16 +131,16 @@ class FarmAPITest(APITestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         
-        self.assertEqual(data['farmer_name'], 'Almas Nurzhanov')
-        self.assertEqual(data['village'], 'Kaskelen')
+        self.assertEqual(data['farmer_name'], 'Bolot Mamatov')
+        self.assertEqual(data['village'], 'Tokmok')
         self.assertEqual(len(data['herds']), 2)
 
 
 class DistrictAPITest(APITestCase):
     def setUp(self):
         """Set up test data"""
-        District.objects.create(name='Almaty Region', code='ALM')
-        District.objects.create(name='Nur-Sultan Region', code='NUR')
+        District.objects.create(name='Chuy Region', code='CHU')
+        District.objects.create(name='Issyk-Kul Region', code='IKL')
     
     def test_districts_list(self):
         """Test that /api/districts/ returns list of districts"""
@@ -151,43 +151,43 @@ class DistrictAPITest(APITestCase):
         data = response.json()
         
         self.assertEqual(len(data), 2)
-        self.assertTrue(any(d['code'] == 'ALM' for d in data))
-        self.assertTrue(any(d['code'] == 'NUR' for d in data))
+        self.assertTrue(any(d['code'] == 'CHU' for d in data))
+        self.assertTrue(any(d['code'] == 'IKL' for d in data))
 
 
 class EventAPITest(APITestCase):
     def setUp(self):
         """Set up test data for events"""
-        # Create districts
-        self.district1 = District.objects.create(name='Almaty Region', code='ALM')
-        self.district2 = District.objects.create(name='Nur-Sultan Region', code='NUR')
+        # Create regions
+        self.district1 = District.objects.create(name='Chuy Region', code='CHU')
+        self.district2 = District.objects.create(name='Issyk-Kul Region', code='IKL')
         
         # Create farms
         self.farm1 = Farm.objects.create(
             district=self.district1,
-            farmer_name='Almas Nurzhanov',
-            phone='+7 701 234 5678',
-            village='Kaskelen',
-            location_lat=43.2,
-            location_lng=76.6
+            farmer_name='Bolot Mamatov',
+            phone='+996 555 123 456',
+            village='Tokmok',
+            location_lat=42.8,
+            location_lng=75.3
         )
         
         self.farm2 = Farm.objects.create(
             district=self.district1,
             farmer_name='Aigul Bekova',
-            phone='+7 702 345 6789',
-            village='Talgar',
-            location_lat=43.3,
-            location_lng=77.2
+            phone='+996 556 234 567',
+            village='Kant',
+            location_lat=42.9,
+            location_lng=74.9
         )
         
         self.farm3 = Farm.objects.create(
             district=self.district2,
-            farmer_name='Yerlan Suleimenov',
-            phone='+7 703 456 7890',
-            village='Aksu',
-            location_lat=51.1,
-            location_lng=71.4
+            farmer_name='Nurlan Toktomushev',
+            phone='+996 557 345 678',
+            village='Cholpon-Ata',
+            location_lat=42.6,
+            location_lng=77.1
         )
         
         # Create events
@@ -242,22 +242,22 @@ class EventAPITest(APITestCase):
         # Check farm_summary is embedded
         self.assertIn('farm_summary', event1_data)
         farm_summary = event1_data['farm_summary']
-        self.assertEqual(farm_summary['farmer_name'], 'Almas Nurzhanov')
-        self.assertEqual(farm_summary['village'], 'Kaskelen')
-        self.assertEqual(farm_summary['district_name'], 'Almaty Region')
+        self.assertEqual(farm_summary['farmer_name'], 'Bolot Mamatov')
+        self.assertEqual(farm_summary['village'], 'Tokmok')
+        self.assertEqual(farm_summary['district_name'], 'Chuy Region')
     
     def test_events_filter_by_district(self):
         """Test filtering events by district code"""
         url = reverse('event-list')
-        response = self.client.get(url, {'district': 'ALM'})
+        response = self.client.get(url, {'district': 'CHU'})
         
         self.assertEqual(response.status_code, 200)
         data = response.json()
         
-        # Should have 3 events from Almaty region
+        # Should have 3 events from Chuy region
         self.assertEqual(len(data), 3)
         for event in data:
-            self.assertEqual(event['farm_summary']['district_name'], 'Almaty Region')
+            self.assertEqual(event['farm_summary']['district_name'], 'Chuy Region')
     
     def test_events_filter_by_event_type(self):
         """Test filtering events by event_type"""

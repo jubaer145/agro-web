@@ -20,9 +20,9 @@ class Command(BaseCommand):
         
         # Create Districts
         districts_data = [
-            {'name': 'Almaty Region', 'code': 'ALM'},
-            {'name': 'Nur-Sultan Region', 'code': 'NUR'},
-            {'name': 'Shymkent Region', 'code': 'SHY'},
+            {'name': 'Chuy Region', 'code': 'CHU'},
+            {'name': 'Issyk-Kul Region', 'code': 'IKL'},
+            {'name': 'Osh Region', 'code': 'OSH'},
         ]
         
         districts = []
@@ -31,24 +31,24 @@ class Command(BaseCommand):
             districts.append(district)
             self.stdout.write(self.style.SUCCESS(f'Created district: {district.name}'))
         
-        # Kazakh/Central Asian names for farmers
+        # Kyrgyz names for farmers
         farmer_names = [
-            'Almas Nurzhanov',
+            'Bolot Mamatov',
             'Aigul Bekova',
-            'Yerlan Suleimenov',
+            'Nurlan Toktomushev',
             'Dinara Aitbekova',
-            'Baurzhan Ospanov',
+            'Azamat Kadyrov',
             'Aizhan Tokayeva',
-            'Murat Kambarov',
-            'Saule Abdullayeva',
-            'Damir Zhumabayev',
-            'Karlygash Ismailova',
+            'Murat Asanov',
+            'Cholpon Abdullayeva',
+            'Bektur Karimov',
+            'Ainura Isaeva',
         ]
         
-        # Village names
+        # Village names (Kyrgyzstan)
         villages = [
-            'Kaskelen', 'Talgar', 'Esik', 'Turgen', 'Issyk',
-            'Aksu', 'Saryagash', 'Kentau', 'Arys', 'Shayan'
+            'Tokmok', 'Kant', 'Kemin', 'Cholpon-Ata', 'Karakol',
+            'Kara-Suu', 'Jalal-Abad', 'Naryn', 'Talas', 'Balykchy'
         ]
         
         # Animal types and typical herd sizes
@@ -69,14 +69,14 @@ class Command(BaseCommand):
             farmer_name = random.choice(farmer_names)
             village = random.choice(villages)
             
-            # Generate realistic Kazakhstan phone numbers
-            phone = f"+7 {random.randint(700, 799)} {random.randint(100, 999)} {random.randint(1000, 9999)}"
+            # Generate realistic Kyrgyzstan phone numbers
+            phone = f"+996 {random.randint(500, 799)} {random.randint(100, 999)} {random.randint(100, 999)}"
             
-            # Generate location coordinates (Kazakhstan approximate bounds)
-            # Latitude: 40.5° to 55.4° N
-            # Longitude: 46.5° to 87.3° E
-            location_lat = round(random.uniform(40.5, 55.4), 6)
-            location_lng = round(random.uniform(46.5, 87.3), 6)
+            # Generate location coordinates (Kyrgyzstan approximate bounds)
+            # Latitude: 39.2° to 43.2° N
+            # Longitude: 69.3° to 80.3° E
+            location_lat = round(random.uniform(39.2, 43.2), 6)
+            location_lng = round(random.uniform(69.3, 80.3), 6)
             
             farm = Farm.objects.create(
                 district=district,

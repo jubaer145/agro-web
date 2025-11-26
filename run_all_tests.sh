@@ -76,12 +76,12 @@ print_info "Testing /api/farms/ (first farm)..."
 curl -s http://localhost:8000/api/farms/ | python3 -m json.tool | head -40
 echo ""
 
-print_info "Testing /api/farms/?district=ALM..."
-curl -s "http://localhost:8000/api/farms/?district=ALM" | python3 -m json.tool | head -30
+print_info "Testing /api/farms/?district=CHU..."
+curl -s "http://localhost:8000/api/farms/?district=CHU" | python3 -m json.tool | head -30
 echo ""
 
-print_info "Testing /api/farms/?search=Almas..."
-curl -s "http://localhost:8000/api/farms/?search=Almas" | python3 -m json.tool | head -30
+print_info "Testing /api/farms/?search=Bolot..."
+curl -s "http://localhost:8000/api/farms/?search=Bolot" | python3 -m json.tool | head -30
 echo ""
 
 print_success "API endpoints responding correctly"

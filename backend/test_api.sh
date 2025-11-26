@@ -21,12 +21,12 @@ echo "3. Testing Farms List..."
 curl -s "${BASE_URL}/api/farms/" | python3 -m json.tool | head -50
 echo -e "\n"
 
-echo "4. Testing Farms Filter by District (ALM)..."
-curl -s "${BASE_URL}/api/farms/?district=ALM" | python3 -m json.tool | head -30
+echo "4. Testing Farms Filter by District (CHU)..."
+curl -s "${BASE_URL}/api/farms/?district=CHU" | python3 -m json.tool | head -30
 echo -e "\n"
 
 echo "5. Testing Farms Search..."
-curl -s "${BASE_URL}/api/farms/?search=Almas" | python3 -m json.tool | head -30
+curl -s "${BASE_URL}/api/farms/?search=Bolot" | python3 -m json.tool | head -30
 echo -e "\n"
 
 echo "======================================"

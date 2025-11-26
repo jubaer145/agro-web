@@ -1,6 +1,6 @@
 # 🌾 Акыл Жер Government Portal
 
-A comprehensive government web portal for agricultural and veterinary system management in Kazakhstan. The system enables monitoring of farms, livestock, disease outbreaks, and crop issues across different districts.
+A comprehensive government web portal for agricultural and veterinary system management in Kyrgyzstan. The system enables monitoring of farms, livestock, disease outbreaks, and crop issues across different regions.
 
 ## Tech Stack
 
@@ -139,7 +139,7 @@ python manage.py seed_fake_data
 ```
 
 This creates:
-- 3 districts (Almaty, Nur-Sultan, Shymkent)
+- 3 regions (Chuy, Issyk-Kul, Osh)
 - 6-10 farms with realistic farmer names and locations
 - 15-30 animal herds (cattle, sheep, goats, horses, poultry)
 - 10-15 veterinary events (visits, vaccinations, disease reports, mortality)
@@ -468,9 +468,9 @@ For questions or issues:
 
 ## 🎉 Acknowledgments
 
-- Built for agricultural management in Kazakhstan
+- Built for agricultural management in Kyrgyzstan
 - Designed for government and farm administrators
-- Supports multilingual content (English/Kazakh/Russian)
+- Supports multilingual content (English/Kyrgyz/Russian)
 
 ---
 
