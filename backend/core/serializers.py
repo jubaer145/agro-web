@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import District, Farm, Herd, Event
+from .models import District, Farm, Herd, Event, CropIssue, CropIssue
 
 
 class DistrictSerializer(serializers.ModelSerializer):
@@ -70,6 +70,45 @@ class EventSerializer(serializers.ModelSerializer):
             'created_at'
         ]
         read_only_fields = ['created_at']
+    
+    def get_farm_summary(self, obj):
+        """Embed farm details: farm_id, farmer_name, village, district_name"""
+        return {
+            'farm_id': obj.farm.id,
+            'farmer_name': obj.farm.farmer_name,
+            'village': obj.farm.village,
+            'district_name': obj.farm.district.name
+        }
+
+
+class CropIssueSerializer(serializers.ModelSerializer):
+    """Serializer for CropIssue model with embedded farm summary"""
+    problem_type_display = serializers.CharField(source='get_problem_type_display', read_only=True)
+    severity_display = serializers.CharField(source='get_severity_display', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    farm_summary = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = CropIssue
+        fields = [
+            'id',
+            'farm',
+            'farm_summary',
+            'crop_type',
+            'problem_type',
+            'problem_type_display',
+            'title',
+            'description',
+            'severity',
+            'severity_display',
+            'area_affected_ha',
+            'status',
+            'status_display',
+            'reported_via',
+            'created_at',
+            'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at']
     
     def get_farm_summary(self, obj):
         """Embed farm details: farm_id, farmer_name, village, district_name"""

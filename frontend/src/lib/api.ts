@@ -78,6 +78,12 @@ export const api = {
   updateEventStatus: (id: number, status: string) =>
     api.patch<any>(`/api/events/${id}/`, { status }),
   
+  cropIssues: (params?: { district?: string; crop_type?: string; problem_type?: string; severity?: string; status?: string }) =>
+    api.get<any>('/api/crop-issues/', params),
+  
+  updateCropIssueStatus: (id: number, status: string) =>
+    api.patch<any>(`/api/crop-issues/${id}/`, { status }),
+  
   dashboardSummary: (district?: string) =>
     api.get<any>('/api/dashboard/summary/', district ? { district } : undefined),
 };

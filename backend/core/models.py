@@ -80,3 +80,45 @@ class Event(models.Model):
     
     def __str__(self):
         return f"{self.get_event_type_display()} at {self.farm.farmer_name}'s farm - {self.status}"
+
+
+class CropIssue(models.Model):
+    """Crop problem/outbreak reported by farmers"""
+    PROBLEM_TYPE_CHOICES = [
+        ('pest', 'Pest'),
+        ('disease', 'Disease'),
+        ('nutrient_deficiency', 'Nutrient Deficiency'),
+        ('water_stress', 'Water Stress'),
+        ('weed', 'Weed'),
+        ('other', 'Other'),
+    ]
+    
+    SEVERITY_CHOICES = [
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('new', 'New'),
+        ('in_progress', 'In Progress'),
+        ('resolved', 'Resolved'),
+    ]
+    
+    farm = models.ForeignKey(Farm, on_delete=models.CASCADE, related_name='crop_issues')
+    crop_type = models.CharField(max_length=100)  # e.g. wheat, barley, potatoes
+    problem_type = models.CharField(max_length=50, choices=PROBLEM_TYPE_CHOICES)
+    title = models.CharField(max_length=200)  # short farmer-facing title
+    description = models.TextField()  # longer text describing problem
+    severity = models.CharField(max_length=20, choices=SEVERITY_CHOICES)
+    area_affected_ha = models.FloatField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
+    reported_via = models.CharField(max_length=20, default='mobile')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.title} at {self.farm.farmer_name}'s farm - {self.status}"

@@ -2,8 +2,8 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import viewsets, filters, status
 from django.db.models import Q, Count, Sum
-from .models import District, Farm, Herd, Event
-from .serializers import DistrictSerializer, FarmSerializer, HerdSerializer, EventSerializer
+from .models import District, Farm, Herd, Event, CropIssue
+from .serializers import DistrictSerializer, FarmSerializer, HerdSerializer, EventSerializer, CropIssueSerializer
 
 
 @api_view(['GET'])
@@ -176,6 +176,66 @@ class EventViewSet(viewsets.ModelViewSet):
         event_type = self.request.query_params.get('event_type', None)
         if event_type:
             queryset = queryset.filter(event_type=event_type)
+        
+        # Filter by status
+        status_filter = self.request.query_params.get('status', None)
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+        
+        return queryset
+    
+    def partial_update(self, request, *args, **kwargs):
+        """
+        PATCH endpoint - only allow updating the status field
+        """
+        # Only allow 'status' field in PATCH
+        if set(request.data.keys()) - {'status'}:
+            return Response(
+                {"error": "Only 'status' field can be updated via PATCH"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        return super().partial_update(request, *args, **kwargs)
+
+
+class CropIssueViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for listing, retrieving, creating, and updating crop issues
+    
+    Query Parameters:
+    - district: Filter by district code
+    - crop_type: Filter by crop type
+    - problem_type: Filter by problem type (pest, disease, nutrient_deficiency, water_stress, weed, other)
+    - severity: Filter by severity (low, medium, high)
+    - status: Filter by status (new, in_progress, resolved)
+    
+    PATCH /api/crop-issues/{id}/ - Update only the status field
+    """
+    queryset = CropIssue.objects.select_related('farm__district').all()
+    serializer_class = CropIssueSerializer
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        
+        # Filter by district code
+        district_code = self.request.query_params.get('district', None)
+        if district_code:
+            queryset = queryset.filter(farm__district__code=district_code)
+        
+        # Filter by crop_type
+        crop_type = self.request.query_params.get('crop_type', None)
+        if crop_type:
+            queryset = queryset.filter(crop_type__icontains=crop_type)
+        
+        # Filter by problem_type
+        problem_type = self.request.query_params.get('problem_type', None)
+        if problem_type:
+            queryset = queryset.filter(problem_type=problem_type)
+        
+        # Filter by severity
+        severity = self.request.query_params.get('severity', None)
+        if severity:
+            queryset = queryset.filter(severity=severity)
         
         # Filter by status
         status_filter = self.request.query_params.get('status', None)

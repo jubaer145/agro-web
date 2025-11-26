@@ -1,9 +1,10 @@
 import { Layout, Menu } from 'antd';
 import { Link, Routes, Route, useLocation } from 'react-router-dom';
-import { DashboardOutlined, HomeOutlined, AlertOutlined, EnvironmentOutlined } from '@ant-design/icons';
+import { DashboardOutlined, HomeOutlined, AlertOutlined, EnvironmentOutlined, ExperimentOutlined } from '@ant-design/icons';
 import DashboardPage from './pages/DashboardPage';
 import FarmsPage from './pages/FarmsPage';
 import EventsPage from './pages/EventsPage';
+import CropIssuesPage from './pages/CropIssuesPage';
 import './App.css';
 
 const { Header, Sider, Content } = Layout;
@@ -13,6 +14,7 @@ export default function App() {
   const getSelectedKey = () => {
     if (location.pathname.startsWith('/farms')) return 'farms';
     if (location.pathname.startsWith('/events')) return 'events';
+    if (location.pathname.startsWith('/crop-issues')) return 'crop-issues';
     return 'dashboard';
   };
 
@@ -69,6 +71,11 @@ export default function App() {
               icon: <AlertOutlined />,
               label: <Link to="/events">Events & Outbreaks</Link>,
             },
+            {
+              key: 'crop-issues',
+              icon: <ExperimentOutlined />,
+              label: <Link to="/crop-issues">Crop Issues</Link>,
+            },
           ]}
         />
       </Sider>
@@ -102,6 +109,7 @@ export default function App() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/farms" element={<FarmsPage />} />
             <Route path="/events" element={<EventsPage />} />
+            <Route path="/crop-issues" element={<CropIssuesPage />} />
           </Routes>
         </Content>
       </Layout>

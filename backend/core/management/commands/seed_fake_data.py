@@ -2,7 +2,7 @@ import random
 from datetime import timedelta
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from core.models import District, Farm, Herd, Event
+from core.models import District, Farm, Herd, Event, CropIssue
 
 
 class Command(BaseCommand):
@@ -12,6 +12,7 @@ class Command(BaseCommand):
         self.stdout.write('Seeding fake data...')
         
         # Clear existing data
+        CropIssue.objects.all().delete()
         Event.objects.all().delete()
         Herd.objects.all().delete()
         Farm.objects.all().delete()
@@ -192,12 +193,128 @@ class Command(BaseCommand):
                 event_info += f' ({disease_suspected})'
             self.stdout.write(event_info)
         
+        # Create CropIssues (8-15 crop issues)
+        crop_types = ['wheat', 'barley', 'potatoes', 'corn', 'tomatoes', 'carrots', 'onions', 'sunflower']
+        problem_types = ['pest', 'disease', 'nutrient_deficiency', 'water_stress', 'weed', 'other']
+        severities = ['low', 'medium', 'high']
+        crop_statuses = ['new', 'in_progress', 'resolved']
+        
+        pest_titles = [
+            'Aphid infestation in crops',
+            'Locust swarm damage',
+            'Cutworm damage observed',
+            'Beetle infestation spreading'
+        ]
+        
+        disease_titles = [
+            'Fungal infection spreading',
+            'Rust disease on wheat',
+            'Blight affecting potatoes',
+            'Wilt disease detected'
+        ]
+        
+        nutrient_titles = [
+            'Yellowing leaves - nitrogen deficiency',
+            'Poor growth - phosphorus deficiency',
+            'Leaf discoloration - potassium deficiency',
+            'Stunted growth - micronutrient deficiency'
+        ]
+        
+        water_titles = [
+            'Drought stress visible',
+            'Wilting from lack of water',
+            'Irrigation system failure',
+            'Waterlogging in field'
+        ]
+        
+        weed_titles = [
+            'Heavy weed infestation',
+            'Invasive weeds spreading',
+            'Weed competition reducing yield',
+            'Thistle infestation'
+        ]
+        
+        other_titles = [
+            'Hail damage to crops',
+            'Frost damage observed',
+            'Wind damage to plants',
+            'Unexpected crop failure'
+        ]
+        
+        title_map = {
+            'pest': pest_titles,
+            'disease': disease_titles,
+            'nutrient_deficiency': nutrient_titles,
+            'water_stress': water_titles,
+            'weed': weed_titles,
+            'other': other_titles
+        }
+        
+        num_crop_issues = random.randint(8, 15)
+        crop_issues = []
+        
+        # Ensure at least 2-3 high severity disease/pest cases
+        high_severity_count = 0
+        medium_severity_count = 0
+        
+        for i in range(num_crop_issues):
+            farm = random.choice(farms)
+            crop_type = random.choice(crop_types)
+            
+            # Ensure we have at least 2-3 high severity disease/pest and 2-3 medium water_stress/nutrient_deficiency
+            if i < 3 and high_severity_count < 3:
+                problem_type = random.choice(['pest', 'disease'])
+                severity = 'high'
+                high_severity_count += 1
+            elif i >= 3 and i < 6 and medium_severity_count < 3:
+                problem_type = random.choice(['water_stress', 'nutrient_deficiency'])
+                severity = 'medium'
+                medium_severity_count += 1
+            else:
+                problem_type = random.choice(problem_types)
+                severity = random.choice(severities)
+            
+            title = random.choice(title_map[problem_type])
+            status_choice = random.choice(crop_statuses)
+            area_affected = round(random.uniform(0.5, 10.0), 2)
+            
+            description_templates = [
+                f'Farmers report {problem_type} affecting {crop_type} crops. Approximately {area_affected} hectares affected. Immediate attention required.',
+                f'{crop_type} field showing signs of {problem_type}. Area: {area_affected} ha. Requesting assistance.',
+                f'Significant {problem_type} issue detected in {crop_type} cultivation. Estimated impact: {area_affected} ha.',
+                f'{crop_type} crops experiencing {problem_type}. Coverage area: {area_affected} hectares. Farmer concerned about yield loss.'
+            ]
+            
+            description = random.choice(description_templates)
+            
+            crop_issue = CropIssue.objects.create(
+                farm=farm,
+                crop_type=crop_type,
+                problem_type=problem_type,
+                title=title,
+                description=description,
+                severity=severity,
+                area_affected_ha=area_affected,
+                status=status_choice,
+                reported_via=random.choice(['mobile', 'web', 'phone'])
+            )
+            
+            # Randomly adjust created_at to be within last 30 days
+            days_ago = random.randint(0, 30)
+            crop_issue.created_at = timezone.now() - timedelta(days=days_ago)
+            crop_issue.save()
+            
+            crop_issues.append(crop_issue)
+            
+            self.stdout.write(f'Created crop issue: {title} ({severity}) - {crop_type} at {farm.farmer_name}\'s farm')
+        
         # Summary
         total_districts = District.objects.count()
         total_farms = Farm.objects.count()
         total_herds = Herd.objects.count()
         total_animals = sum(h.headcount for h in Herd.objects.all())
         total_events = Event.objects.count()
+        total_crop_issues = CropIssue.objects.count()
         
         self.stdout.write(self.style.SUCCESS('\n=== Summary ==='))
         self.stdout.write(self.style.SUCCESS(f'Districts created: {total_districts}'))
@@ -205,4 +322,5 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f'Herds created: {total_herds}'))
         self.stdout.write(self.style.SUCCESS(f'Total animals: {total_animals}'))
         self.stdout.write(self.style.SUCCESS(f'Events created: {total_events}'))
+        self.stdout.write(self.style.SUCCESS(f'Crop issues created: {total_crop_issues}'))
         self.stdout.write(self.style.SUCCESS('\nFake data seeded successfully!'))
