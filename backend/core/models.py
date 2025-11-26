@@ -55,28 +55,28 @@ class Herd(models.Model):
 class Event(models.Model):
     """Disease outbreak or veterinary event at a farm"""
     EVENT_TYPES = [
-        ('disease_outbreak', 'Disease Outbreak'),
+        ('vet_visit', 'Veterinary Visit'),
         ('vaccination', 'Vaccination'),
-        ('inspection', 'Inspection'),
-        ('quarantine', 'Quarantine'),
+        ('disease_report', 'Disease Report'),
+        ('mortality', 'Mortality'),
     ]
     
     STATUS_CHOICES = [
-        ('reported', 'Reported'),
-        ('investigating', 'Investigating'),
-        ('contained', 'Contained'),
+        ('new', 'New'),
+        ('in_progress', 'In Progress'),
         ('resolved', 'Resolved'),
     ]
     
     farm = models.ForeignKey(Farm, on_delete=models.CASCADE, related_name='events')
     event_type = models.CharField(max_length=50, choices=EVENT_TYPES)
-    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='reported')
+    disease_suspected = models.CharField(max_length=200, null=True, blank=True)
     description = models.TextField()
-    reported_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    animals_affected = models.IntegerField(null=True, blank=True)
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='new')
+    created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
-        ordering = ['-reported_at']
+        ordering = ['-created_at']
     
     def __str__(self):
         return f"{self.get_event_type_display()} at {self.farm.farmer_name}'s farm - {self.status}"

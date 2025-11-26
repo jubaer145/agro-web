@@ -193,9 +193,11 @@ class EventAPITest(APITestCase):
         # Create events
         self.event1 = Event.objects.create(
             farm=self.farm1,
-            event_type='disease_outbreak',
-            status='reported',
-            description='Foot-and-mouth disease suspected in cattle herd'
+            event_type='disease_report',
+            status='new',
+            description='Foot-and-mouth disease suspected in cattle herd',
+            disease_suspected='Foot-and-mouth disease',
+            animals_affected=10
         )
         
         self.event2 = Event.objects.create(
@@ -207,16 +209,18 @@ class EventAPITest(APITestCase):
         
         self.event3 = Event.objects.create(
             farm=self.farm2,
-            event_type='inspection',
-            status='investigating',
+            event_type='vet_visit',
+            status='in_progress',
             description='Routine veterinary inspection'
         )
         
         self.event4 = Event.objects.create(
             farm=self.farm3,
-            event_type='quarantine',
-            status='contained',
-            description='Quarantine imposed due to disease outbreak'
+            event_type='mortality',
+            status='in_progress',
+            description='Animal deaths reported',
+            disease_suspected='Avian influenza',
+            animals_affected=5
         )
     
     def test_events_list(self):
@@ -232,8 +236,8 @@ class EventAPITest(APITestCase):
         
         # Check first event has nested farm_summary
         event1_data = next(e for e in data if e['id'] == self.event1.id)
-        self.assertEqual(event1_data['event_type'], 'disease_outbreak')
-        self.assertEqual(event1_data['status'], 'reported')
+        self.assertEqual(event1_data['event_type'], 'disease_report')
+        self.assertEqual(event1_data['status'], 'new')
         
         # Check farm_summary is embedded
         self.assertIn('farm_summary', event1_data)
@@ -258,26 +262,26 @@ class EventAPITest(APITestCase):
     def test_events_filter_by_event_type(self):
         """Test filtering events by event_type"""
         url = reverse('event-list')
-        response = self.client.get(url, {'event_type': 'disease_outbreak'})
+        response = self.client.get(url, {'event_type': 'disease_report'})
         
         self.assertEqual(response.status_code, 200)
         data = response.json()
         
-        # Should have 1 disease_outbreak event
+        # Should have 1 disease_report event
         self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]['event_type'], 'disease_outbreak')
+        self.assertEqual(data[0]['event_type'], 'disease_report')
     
     def test_events_filter_by_status(self):
         """Test filtering events by status"""
         url = reverse('event-list')
-        response = self.client.get(url, {'status': 'reported'})
+        response = self.client.get(url, {'status': 'new'})
         
         self.assertEqual(response.status_code, 200)
         data = response.json()
         
-        # Should have 1 reported event
+        # Should have 1 new event
         self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]['status'], 'reported')
+        self.assertEqual(data[0]['status'], 'new')
     
     def test_events_filter_multiple(self):
         """Test filtering events by multiple parameters"""
@@ -300,27 +304,27 @@ class EventAPITest(APITestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         
-        self.assertEqual(data['event_type'], 'disease_outbreak')
-        self.assertEqual(data['status'], 'reported')
+        self.assertEqual(data['event_type'], 'disease_report')
+        self.assertEqual(data['status'], 'new')
         self.assertIn('farm_summary', data)
     
     def test_event_patch_status_only(self):
         """Test PATCH endpoint allows updating only status field"""
         url = reverse('event-detail', args=[self.event1.id])
-        response = self.client.patch(url, {'status': 'investigating'}, format='json')
+        response = self.client.patch(url, {'status': 'in_progress'}, format='json')
         
         self.assertEqual(response.status_code, 200)
         
         # Verify status was updated
         self.event1.refresh_from_db()
-        self.assertEqual(self.event1.status, 'investigating')
+        self.assertEqual(self.event1.status, 'in_progress')
     
     def test_event_patch_status_invalid_field(self):
         """Test PATCH endpoint rejects updates to fields other than status"""
         url = reverse('event-detail', args=[self.event1.id])
         response = self.client.patch(
             url,
-            {'status': 'investigating', 'description': 'New description'},
+            {'status': 'in_progress', 'description': 'New description'},
             format='json'
         )
         
@@ -329,5 +333,74 @@ class EventAPITest(APITestCase):
         
         # Verify nothing was updated
         self.event1.refresh_from_db()
-        self.assertEqual(self.event1.status, 'reported')
+        self.assertEqual(self.event1.status, 'new')
         self.assertEqual(self.event1.description, 'Foot-and-mouth disease suspected in cattle herd')
+
+
+class DashboardAPITest(APITestCase):
+    def setUp(self):
+        """Set up test data"""
+        # Create districts
+        self.district1 = District.objects.create(name='Almaty Region', code='ALM')
+        self.district2 = District.objects.create(name='Nur-Sultan Region', code='NUR')
+        
+        # Create farms
+        self.farm1 = Farm.objects.create(
+            district=self.district1,
+            farmer_name='Almas Nurzhanov',
+            phone='+7 701 234 5678',
+            village='Kaskelen'
+        )
+        
+        self.farm2 = Farm.objects.create(
+            district=self.district2,
+            farmer_name='Yerlan Suleimenov',
+            phone='+7 703 456 7890',
+            village='Aksu'
+        )
+        
+        # Create herds
+        Herd.objects.create(farm=self.farm1, animal_type='cattle', headcount=25)
+        Herd.objects.create(farm=self.farm2, animal_type='sheep', headcount=100)
+        
+        # Create events
+        Event.objects.create(
+            farm=self.farm1,
+            event_type='disease_report',
+            status='new',
+            description='Test outbreak',
+            disease_suspected='Foot-and-mouth disease',
+            animals_affected=10
+        )
+        
+        Event.objects.create(
+            farm=self.farm2,
+            event_type='vaccination',
+            status='resolved',
+            description='Routine vaccination'
+        )
+    
+    def test_dashboard_summary_all(self):
+        """Test dashboard summary without filter"""
+        url = reverse('dashboard-summary')
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        self.assertEqual(data['total_farms'], 2)
+        self.assertEqual(data['total_animals'], 125)
+        self.assertEqual(data['open_outbreaks'], 1)
+        self.assertEqual(len(data['farms_by_district']), 2)
+    
+    def test_dashboard_summary_filtered(self):
+        """Test dashboard summary with district filter"""
+        url = reverse('dashboard-summary')
+        response = self.client.get(url, {'district': 'ALM'})
+        
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        self.assertEqual(data['total_farms'], 1)
+        self.assertEqual(data['total_animals'], 25)
+        self.assertEqual(data['open_outbreaks'], 1)

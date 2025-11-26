@@ -18,7 +18,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from core.views import health, api_root, DistrictViewSet, FarmViewSet, EventViewSet
+from core.views import health, api_root, dashboard_summary, DistrictViewSet, FarmViewSet, EventViewSet
 
 # Create router for DRF viewsets
 router = DefaultRouter()
@@ -30,5 +30,6 @@ urlpatterns = [
     path("", api_root, name="api-root"),
     path("admin/", admin.site.urls),
     path("api/health/", health, name="health"),
+    path("api/dashboard/summary/", dashboard_summary, name="dashboard-summary"),
     path("api/", include(router.urls)),
 ]

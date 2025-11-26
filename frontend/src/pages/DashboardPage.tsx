@@ -1,99 +1,203 @@
 import { useEffect, useState } from 'react';
-import { Card, Spin, Alert, Row, Col, Statistic } from 'antd';
-import { CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { Card, Spin, Alert, Row, Col, Statistic, Select, Table } from 'antd';
+import { HomeOutlined, TeamOutlined, WarningOutlined } from '@ant-design/icons';
+import type { District } from '../types/farm';
+
+const { Option } = Select;
+
+interface DashboardSummary {
+  total_farms: number;
+  total_animals: number;
+  open_outbreaks: number;
+  farms_by_district: Array<{
+    district_code: string;
+    district_name: string;
+    farm_count: number;
+  }>;
+  outbreaks_by_disease: Array<{
+    disease_suspected: string;
+    count: number;
+  }>;
+}
 
 export default function DashboardPage() {
-  const [status, setStatus] = useState<string | null>(null);
+  const [districts, setDistricts] = useState<District[]>([]);
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [selectedDistrict, setSelectedDistrict] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api/health/')
-      .then(res => {
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        }
-        return res.json();
-      })
-      .then(data => {
-        setStatus(data?.status ?? 'unknown');
-        setError(null);
-      })
-      .catch(err => {
-        setStatus('error');
-        setError(err.message);
-      })
-      .finally(() => setLoading(false));
+    fetchDistricts();
   }, []);
 
-  const isHealthy = status === 'ok';
+  useEffect(() => {
+    fetchSummary();
+  }, [selectedDistrict]);
+
+  const fetchDistricts = async () => {
+    try {
+      const response = await fetch('/api/districts/');
+      if (!response.ok) throw new Error('Failed to fetch districts');
+      const data = await response.json();
+      setDistricts(data);
+    } catch (err) {
+      console.error('Error fetching districts:', err);
+    }
+  };
+
+  const fetchSummary = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const params = new URLSearchParams();
+      if (selectedDistrict) params.append('district', selectedDistrict);
+      
+      const url = `/api/dashboard/summary/${params.toString() ? '?' + params.toString() : ''}`;
+      const response = await fetch(url);
+      
+      if (!response.ok) throw new Error('Failed to fetch dashboard summary');
+      
+      const data = await response.json();
+      setSummary(data);
+    } catch (err) {
+      console.error('Error fetching summary:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load dashboard summary');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const farmsByDistrictColumns = [
+    {
+      title: 'District',
+      dataIndex: 'district_name',
+      key: 'district_name',
+    },
+    {
+      title: 'Code',
+      dataIndex: 'district_code',
+      key: 'district_code',
+    },
+    {
+      title: 'Farms',
+      dataIndex: 'farm_count',
+      key: 'farm_count',
+      align: 'right' as const,
+    },
+  ];
+
+  const outbreaksByDiseaseColumns = [
+    {
+      title: 'Disease',
+      dataIndex: 'disease_suspected',
+      key: 'disease_suspected',
+    },
+    {
+      title: 'Count',
+      dataIndex: 'count',
+      key: 'count',
+      align: 'right' as const,
+    },
+  ];
 
   return (
     <div>
-      <h1>Dashboard</h1>
-      
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} md={8}>
-          <Card>
-            <Statistic
-              title="API Status"
-              value={loading ? 'Checking...' : status || 'Unknown'}
-              prefix={loading ? <Spin size="small" /> : 
-                     isHealthy ? <CheckCircleOutlined style={{ color: '#52c41a' }} /> : 
-                     <ExclamationCircleOutlined style={{ color: '#ff4d4f' }} />}
-              valueStyle={{ 
-                color: loading ? '#1890ff' : 
-                       isHealthy ? '#52c41a' : '#ff4d4f' 
-              }}
-            />
-            <div data-testid="api-status" style={{ display: 'none' }}>
-              {status}
-            </div>
-          </Card>
-        </Col>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <h1>Dashboard</h1>
         
-        <Col xs={24} sm={12} md={8}>
-          <Card>
-            <Statistic
-              title="Total Farms"
-              value={1234}
-              suffix="registered"
-            />
-          </Card>
-        </Col>
-        
-        <Col xs={24} sm={12} md={8}>
-          <Card>
-            <Statistic
-              title="Active Events"
-              value={42}
-              suffix="ongoing"
-            />
-          </Card>
-        </Col>
-      </Row>
+        <div>
+          <label style={{ marginRight: 8, fontWeight: 500 }}>District:</label>
+          <Select
+            style={{ width: 200 }}
+            placeholder="All Districts"
+            value={selectedDistrict || undefined}
+            onChange={(value) => setSelectedDistrict(value || '')}
+            allowClear
+          >
+            {districts.map((district) => (
+              <Option key={district.code} value={district.code}>
+                {district.name}
+              </Option>
+            ))}
+          </Select>
+        </div>
+      </div>
 
       {error && (
         <Alert
-          message="API Connection Error"
+          message="Error"
           description={error}
           type="error"
-          showIcon
-          style={{ marginTop: 16 }}
+          closable
+          onClose={() => setError(null)}
+          style={{ marginBottom: 16 }}
         />
       )}
 
-      <Card title="System Overview" style={{ marginTop: 24 }}>
-        <p>
-          Welcome to the Akyl Jer Government Portal. This dashboard provides
-          an overview of the agricultural and veterinary management system.
-        </p>
-        <ul>
-          <li><strong>Farms:</strong> Manage farm registrations, inspections, and compliance</li>
-          <li><strong>Events:</strong> Track veterinary visits, treatments, and health monitoring</li>
-          <li><strong>API Status:</strong> Monitor backend service connectivity</li>
-        </ul>
-      </Card>
+      <Spin spinning={loading}>
+        <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+          <Col xs={24} sm={8}>
+            <Card>
+              <Statistic
+                title="Total Farms"
+                value={summary?.total_farms ?? 0}
+                prefix={<HomeOutlined />}
+                valueStyle={{ color: '#3f8600' }}
+              />
+            </Card>
+          </Col>
+          
+          <Col xs={24} sm={8}>
+            <Card>
+              <Statistic
+                title="Total Animals"
+                value={summary?.total_animals ?? 0}
+                prefix={<TeamOutlined />}
+                valueStyle={{ color: '#1890ff' }}
+              />
+            </Card>
+          </Col>
+          
+          <Col xs={24} sm={8}>
+            <Card>
+              <Statistic
+                title="Open Outbreaks"
+                value={summary?.open_outbreaks ?? 0}
+                prefix={<WarningOutlined />}
+                valueStyle={{ color: summary?.open_outbreaks ? '#cf1322' : '#3f8600' }}
+              />
+            </Card>
+          </Col>
+        </Row>
+
+        <Row gutter={[16, 16]}>
+          <Col xs={24} lg={12}>
+            <Card title="Farms by District">
+              <Table
+                dataSource={summary?.farms_by_district ?? []}
+                columns={farmsByDistrictColumns}
+                rowKey="district_code"
+                pagination={false}
+                size="small"
+              />
+            </Card>
+          </Col>
+          
+          <Col xs={24} lg={12}>
+            <Card title="Outbreaks by Disease">
+              <Table
+                dataSource={summary?.outbreaks_by_disease ?? []}
+                columns={outbreaksByDiseaseColumns}
+                rowKey="disease_suspected"
+                pagination={false}
+                size="small"
+              />
+            </Card>
+          </Col>
+        </Row>
+      </Spin>
     </div>
   );
 }

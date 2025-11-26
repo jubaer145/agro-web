@@ -102,43 +102,53 @@ class Command(BaseCommand):
                 self.stdout.write(f'  - Added herd: {headcount} {animal_type}')
         
         # Create Events (10-15 events)
-        event_types = ['disease_outbreak', 'vaccination', 'inspection', 'quarantine']
-        statuses = ['reported', 'investigating', 'contained', 'resolved']
+        event_types = ['vet_visit', 'vaccination', 'disease_report', 'mortality']
+        statuses = ['new', 'in_progress', 'resolved']
         
-        disease_descriptions = [
-            'Foot-and-mouth disease suspected in cattle herd',
-            'Avian influenza detected in poultry',
-            'Brucellosis outbreak in sheep',
-            'Anthrax cases reported in cattle',
-            'Newcastle disease in chickens'
+        diseases = [
+            'Foot-and-mouth disease',
+            'Avian influenza',
+            'Brucellosis',
+            'Anthrax',
+            'Newcastle disease',
+            'Tuberculosis',
+            'Mastitis',
+            'Blackleg'
+        ]
+        
+        vet_visit_descriptions = [
+            'Routine veterinary checkup',
+            'Annual health examination',
+            'Follow-up visit for treatment',
+            'Pre-breeding health assessment'
         ]
         
         vaccination_descriptions = [
-            'Routine vaccination campaign for cattle',
-            'Seasonal flu vaccination for poultry',
-            'Rabies vaccination for livestock',
-            'Brucellosis vaccination program'
+            'Routine vaccination campaign',
+            'Seasonal flu vaccination',
+            'Rabies vaccination program',
+            'Brucellosis vaccination'
         ]
         
-        inspection_descriptions = [
-            'Routine veterinary inspection',
-            'Annual health check for livestock',
-            'Disease surveillance inspection',
-            'Pre-sale health certificate inspection'
+        disease_report_descriptions = [
+            'Unusual symptoms observed in herd',
+            'Suspected disease outbreak reported',
+            'Animals showing signs of illness',
+            'Disease symptoms detected during inspection'
         ]
         
-        quarantine_descriptions = [
-            'Quarantine imposed due to disease outbreak',
-            'Preventive quarantine for new animals',
-            'Post-outbreak quarantine measures',
-            'Movement restriction in affected area'
+        mortality_descriptions = [
+            'Animal deaths reported',
+            'Multiple casualties in herd',
+            'Sudden death incident',
+            'Disease-related mortality'
         ]
         
         description_map = {
-            'disease_outbreak': disease_descriptions,
+            'vet_visit': vet_visit_descriptions,
             'vaccination': vaccination_descriptions,
-            'inspection': inspection_descriptions,
-            'quarantine': quarantine_descriptions
+            'disease_report': disease_report_descriptions,
+            'mortality': mortality_descriptions
         }
         
         num_events = random.randint(10, 15)
@@ -150,23 +160,37 @@ class Command(BaseCommand):
             status_choice = random.choice(statuses)
             description = random.choice(description_map[event_type])
             
+            # Set disease_suspected for disease_report and mortality events
+            disease_suspected = None
+            if event_type in ['disease_report', 'mortality']:
+                disease_suspected = random.choice(diseases) if random.random() > 0.3 else None
+            
+            # Set animals_affected for disease_report and mortality events
+            animals_affected = None
+            if event_type in ['disease_report', 'mortality']:
+                animals_affected = random.randint(1, 50)
+            
             # Create event with varying timestamps (within last 30 days)
             event = Event.objects.create(
                 farm=farm,
                 event_type=event_type,
                 status=status_choice,
-                description=description
+                description=description,
+                disease_suspected=disease_suspected,
+                animals_affected=animals_affected
             )
             
-            # Randomly adjust reported_at to be within last 30 days
+            # Randomly adjust created_at to be within last 30 days
             days_ago = random.randint(0, 30)
-            event.reported_at = timezone.now() - timedelta(days=days_ago)
+            event.created_at = timezone.now() - timedelta(days=days_ago)
             event.save()
             
             events.append(event)
-            self.stdout.write(
-                f'Created event: {event.get_event_type_display()} at {farm.farmer_name}\'s farm - {status_choice}'
-            )
+            
+            event_info = f'Created event: {event.get_event_type_display()} at {farm.farmer_name}\'s farm - {status_choice}'
+            if disease_suspected:
+                event_info += f' ({disease_suspected})'
+            self.stdout.write(event_info)
         
         # Summary
         total_districts = District.objects.count()

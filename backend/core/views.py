@@ -1,7 +1,7 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import viewsets, filters, status
-from django.db.models import Q
+from django.db.models import Q, Count, Sum
 from .models import District, Farm, Herd, Event
 from .serializers import DistrictSerializer, FarmSerializer, HerdSerializer, EventSerializer
 
@@ -24,8 +24,92 @@ def api_root(request):
             "districts": "/api/districts/",
             "farms": "/api/farms/",
             "events": "/api/events/",
+            "dashboard": "/api/dashboard/summary/",
             "admin": "/admin/"
         }
+    })
+
+
+@api_view(['GET'])
+def dashboard_summary(request):
+    """
+    Dashboard summary statistics
+    
+    Query Parameters:
+    - district: Filter by district code (optional)
+    """
+    district_code = request.query_params.get('district', None)
+    
+    # Base querysets
+    farms_qs = Farm.objects.all()
+    herds_qs = Herd.objects.all()
+    events_qs = Event.objects.all()
+    
+    # Apply district filter if provided
+    if district_code:
+        farms_qs = farms_qs.filter(district__code=district_code)
+        herds_qs = herds_qs.filter(farm__district__code=district_code)
+        events_qs = events_qs.filter(farm__district__code=district_code)
+    
+    # Total farms
+    total_farms = farms_qs.count()
+    
+    # Total animals (sum of all herd headcounts)
+    total_animals = herds_qs.aggregate(total=Sum('headcount'))['total'] or 0
+    
+    # Open outbreaks (disease_report or mortality with status new/in_progress)
+    open_outbreaks = events_qs.filter(
+        event_type__in=['disease_report', 'mortality'],
+        status__in=['new', 'in_progress']
+    ).count()
+    
+    # Farms by district
+    if district_code:
+        # If filtering by district, only show that district
+        farms_by_district = farms_qs.values(
+            'district__code', 'district__name'
+        ).annotate(
+            farm_count=Count('id')
+        ).order_by('district__name')
+    else:
+        # Show all districts
+        farms_by_district = Farm.objects.values(
+            'district__code', 'district__name'
+        ).annotate(
+            farm_count=Count('id')
+        ).order_by('district__name')
+    
+    farms_by_district_list = [
+        {
+            'district_code': item['district__code'],
+            'district_name': item['district__name'],
+            'farm_count': item['farm_count']
+        }
+        for item in farms_by_district
+    ]
+    
+    # Outbreaks by disease (for disease_report/mortality where disease_suspected is not null)
+    outbreaks_by_disease = events_qs.filter(
+        event_type__in=['disease_report', 'mortality'],
+        disease_suspected__isnull=False
+    ).values('disease_suspected').annotate(
+        count=Count('id')
+    ).order_by('-count')
+    
+    outbreaks_by_disease_list = [
+        {
+            'disease_suspected': item['disease_suspected'],
+            'count': item['count']
+        }
+        for item in outbreaks_by_disease
+    ]
+    
+    return Response({
+        'total_farms': total_farms,
+        'total_animals': total_animals,
+        'open_outbreaks': open_outbreaks,
+        'farms_by_district': farms_by_district_list,
+        'outbreaks_by_disease': outbreaks_by_disease_list
     })
 
 

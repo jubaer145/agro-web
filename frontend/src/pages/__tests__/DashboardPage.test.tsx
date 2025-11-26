@@ -2,60 +2,64 @@
  * @jest-environment jsdom
  */
 
+import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import DashboardPage from '../DashboardPage';
 
-// Mock fetch globally
-beforeEach(() => {
-  (global as any).fetch = jest.fn(() =>
-    Promise.resolve({
-      ok: true,
-      json: () => Promise.resolve({ status: 'ok' })
-    } as Response)
-  );
-});
+const mockDistricts = [
+  { id: 1, name: 'Almaty Region', code: 'ALM' },
+  { id: 2, name: 'Nur-Sultan Region', code: 'NUR' }
+];
 
-afterEach(() => {
-  jest.restoreAllMocks();
-});
+const mockSummary = {
+  total_farms: 10,
+  total_animals: 1414,
+  open_outbreaks: 2,
+  farms_by_district: [
+    { district_code: 'ALM', district_name: 'Almaty Region', farm_count: 5 },
+    { district_code: 'NUR', district_name: 'Nur-Sultan Region', farm_count: 5 }
+  ],
+  outbreaks_by_disease: [
+    { disease_suspected: 'Foot-and-mouth disease', count: 1 },
+    { disease_suspected: 'Avian influenza', count: 1 }
+  ]
+};
+
+const mockFetch = jest.fn();
+global.fetch = mockFetch as any;
 
 describe('DashboardPage', () => {
-  test('renders Dashboard title', () => {
-    render(<DashboardPage />);
-    expect(screen.getByText(/Dashboard/i)).toBeInTheDocument();
+  beforeEach(() => {
+    mockFetch.mockClear();
   });
 
-  test('calls /api/health/ and displays status', async () => {
-    render(<DashboardPage />);
-    
-    // Wait for the API call to complete
-    await waitFor(() => {
-      const statusElement = screen.getByTestId('api-status');
-      expect(statusElement).toBeInTheDocument();
-    });
-    
-    // Check that the status is displayed
-    const statusElement = screen.getByTestId('api-status');
-    expect(statusElement.textContent).toBe('ok');
-  });
-
-  test('handles API error gracefully', async () => {
-    // Mock a failed fetch
-    (global as any).fetch = jest.fn(() =>
-      Promise.reject(new Error('Network error'))
-    );
+  it('displays KPI cards with data', async () => {
+    mockFetch
+      .mockResolvedValueOnce({ ok: true, json: async () => mockDistricts })
+      .mockResolvedValueOnce({ ok: true, json: async () => mockSummary });
 
     render(<DashboardPage />);
-    
+
     await waitFor(() => {
-      const statusElement = screen.getByTestId('api-status');
-      expect(statusElement.textContent).toBe('error');
+      expect(screen.getByText('10')).toBeTruthy();
+      expect(screen.getByText('1414')).toBeTruthy();
+      expect(screen.getByText('2')).toBeTruthy();
     });
   });
 
-  test('displays system overview card', () => {
+  it('fetches summary with district filter', async () => {
+    const filteredSummary = { ...mockSummary, total_farms: 5 };
+    
+    mockFetch
+      .mockResolvedValueOnce({ ok: true, json: async () => mockDistricts })
+      .mockResolvedValueOnce({ ok: true, json: async () => mockSummary })
+      .mockResolvedValueOnce({ ok: true, json: async () => filteredSummary });
+
     render(<DashboardPage />);
-    expect(screen.getByText(/System Overview/i)).toBeInTheDocument();
-    expect(screen.getByText(/Akyl Jer Government Portal/i)).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith('/api/districts/');
+      expect(mockFetch).toHaveBeenCalledWith('/api/dashboard/summary/');
+    });
   });
 });

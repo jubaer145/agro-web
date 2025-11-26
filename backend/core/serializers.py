@@ -62,18 +62,19 @@ class EventSerializer(serializers.ModelSerializer):
             'farm_summary',
             'event_type',
             'event_type_display',
+            'disease_suspected',
+            'description',
+            'animals_affected',
             'status',
             'status_display',
-            'description',
-            'reported_at',
-            'updated_at'
+            'created_at'
         ]
-        read_only_fields = ['reported_at', 'updated_at']
+        read_only_fields = ['created_at']
     
     def get_farm_summary(self, obj):
-        """Embed farm details: id, farmer_name, village, district_name"""
+        """Embed farm details: farm_id, farmer_name, village, district_name"""
         return {
-            'id': obj.farm.id,
+            'farm_id': obj.farm.id,
             'farmer_name': obj.farm.farmer_name,
             'village': obj.farm.village,
             'district_name': obj.farm.district.name
