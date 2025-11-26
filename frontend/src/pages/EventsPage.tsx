@@ -3,6 +3,7 @@ import { Card, Table, Select, Space, Alert, Spin, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import type { Event } from '../types/event';
 import type { District } from '../types/farm';
+import { api } from '../lib/api';
 
 const { Option } = Select;
 
@@ -30,9 +31,7 @@ export default function EventsPage() {
 
   const fetchDistricts = async () => {
     try {
-      const response = await fetch('/api/districts/');
-      if (!response.ok) throw new Error('Failed to fetch districts');
-      const data = await response.json();
+      const data = await api.districts();
       setDistricts(data);
     } catch (err) {
       console.error('Error fetching districts:', err);
@@ -45,17 +44,11 @@ export default function EventsPage() {
     setError(null);
     
     try {
-      const params = new URLSearchParams();
-      if (selectedDistrict) params.append('district', selectedDistrict);
-      if (selectedEventType) params.append('event_type', selectedEventType);
-      if (selectedStatus) params.append('status', selectedStatus);
-      
-      const url = `/api/events/${params.toString() ? '?' + params.toString() : ''}`;
-      const response = await fetch(url);
-      
-      if (!response.ok) throw new Error('Failed to fetch events');
-      
-      const data = await response.json();
+      const data = await api.events({
+        district: selectedDistrict,
+        event_type: selectedEventType,
+        status: selectedStatus,
+      });
       setEvents(data);
     } catch (err) {
       console.error('Error fetching events:', err);
@@ -70,17 +63,7 @@ export default function EventsPage() {
     setUpdatingEventId(eventId);
     
     try {
-      const response = await fetch(`/api/events/${eventId}/`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
-      
-      if (!response.ok) throw new Error('Failed to update status');
-      
-      const updatedEvent = await response.json();
+      const updatedEvent = await api.updateEventStatus(eventId, newStatus);
       
       // Update the event in the local state
       setEvents(events.map(event => 
@@ -275,10 +258,12 @@ export default function EventsPage() {
             columns={columns} 
             dataSource={events}
             rowKey="id"
+            scroll={{ x: 1200 }}
             pagination={{ 
               pageSize: 10,
               showSizeChanger: true,
-              showTotal: (total) => `Total ${total} events`
+              showTotal: (total) => `Total ${total} events`,
+              responsive: true
             }}
           />
         </Spin>

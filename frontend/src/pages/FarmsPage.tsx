@@ -3,6 +3,7 @@ import { Card, Table, Select, Input, Space, Alert, Spin, Tag, Tooltip } from 'an
 import { SearchOutlined, EnvironmentOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { Farm, District } from '../types/farm';
+import { api } from '../lib/api';
 
 const { Option } = Select;
 
@@ -28,9 +29,7 @@ export default function FarmsPage() {
 
   const fetchDistricts = async () => {
     try {
-      const response = await fetch('/api/districts/');
-      if (!response.ok) throw new Error('Failed to fetch districts');
-      const data = await response.json();
+      const data = await api.districts();
       setDistricts(data);
     } catch (err) {
       console.error('Error fetching districts:', err);
@@ -43,16 +42,10 @@ export default function FarmsPage() {
     setError(null);
     
     try {
-      const params = new URLSearchParams();
-      if (selectedDistrict) params.append('district', selectedDistrict);
-      if (searchText) params.append('search', searchText);
-      
-      const url = `/api/farms/${params.toString() ? '?' + params.toString() : ''}`;
-      const response = await fetch(url);
-      
-      if (!response.ok) throw new Error('Failed to fetch farms');
-      
-      const data = await response.json();
+      const data = await api.farms({
+        district: selectedDistrict,
+        search: searchText,
+      });
       setFarms(data);
     } catch (err) {
       console.error('Error fetching farms:', err);
@@ -200,12 +193,14 @@ export default function FarmsPage() {
             columns={columns}
             dataSource={farms}
             rowKey="id"
+            scroll={{ x: 1000 }}
             pagination={{
               pageSize: 10,
               showSizeChanger: true,
               pageSizeOptions: ['10', '20', '50', '100'],
               showTotal: (total, range) => 
                 `${range[0]}-${range[1]} of ${total} farms`,
+              responsive: true
             }}
             locale={{
               emptyText: loading ? 'Loading...' : 'No farms found'

@@ -19,7 +19,7 @@
   - Events nav item with icon
   
 - ✅ **Top Bar (Layout.Header)**
-  - Title: "Akyl Jer Government Portal"
+  - Title: "Акыл Жер Government Portal"
   - Professional styling
   
 - ✅ **Content Area (Layout.Content)**
@@ -83,9 +83,9 @@ npm test
 ## 🎯 What You Should See
 
 ### At http://localhost:5173/dashboard:
-1. Left sidebar with "Akyl Jer" branding
+1. Left sidebar with "Акыл Жер" branding
 2. Navigation items: Dashboard (selected), Farms, Events
-3. Top header with "Akyl Jer Government Portal"
+3. Top header with "Акыл Жер Government Portal"
 4. Dashboard content with:
    - API Status card showing "ok" (green check icon)
    - Total Farms statistic

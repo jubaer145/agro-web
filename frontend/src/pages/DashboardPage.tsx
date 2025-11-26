@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Card, Spin, Alert, Row, Col, Statistic, Select, Table } from 'antd';
 import { HomeOutlined, TeamOutlined, WarningOutlined } from '@ant-design/icons';
 import type { District } from '../types/farm';
+import { api } from '../lib/api';
 
 const { Option } = Select;
 
@@ -37,9 +38,7 @@ export default function DashboardPage() {
 
   const fetchDistricts = async () => {
     try {
-      const response = await fetch('/api/districts/');
-      if (!response.ok) throw new Error('Failed to fetch districts');
-      const data = await response.json();
+      const data = await api.districts();
       setDistricts(data);
     } catch (err) {
       console.error('Error fetching districts:', err);
@@ -51,15 +50,7 @@ export default function DashboardPage() {
     setError(null);
     
     try {
-      const params = new URLSearchParams();
-      if (selectedDistrict) params.append('district', selectedDistrict);
-      
-      const url = `/api/dashboard/summary/${params.toString() ? '?' + params.toString() : ''}`;
-      const response = await fetch(url);
-      
-      if (!response.ok) throw new Error('Failed to fetch dashboard summary');
-      
-      const data = await response.json();
+      const data = await api.dashboardSummary(selectedDistrict);
       setSummary(data);
     } catch (err) {
       console.error('Error fetching summary:', err);
